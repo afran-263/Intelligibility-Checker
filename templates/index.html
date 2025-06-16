@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Intelligibility Checker</title>
+  <style>
+    body {
+      background: #181c20;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding-top: 60px;
+    }
+    #referenceInput {
+      font-size: 1.2em;
+      padding: 10px;
+      width: 60%;
+      margin-bottom: 30px;
+      border-radius: 5px;
+      border: none;
+      outline: none;
+    }
+    #setReferenceBtn {
+      font-size: 1.1em;
+      padding: 10px 25px;
+      border-radius: 5px;
+      border: none;
+      background: #2ecc40;
+      color: #fff;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+    #mic-container {
+      margin: 40px auto 20px auto;
+      width: 160px;
+      height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #mic-btn {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: #e74c3c;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      position: relative;
+      box-shadow: 0 0 0 0 rgba(231,76,60,0.7);
+      transition: box-shadow 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.5em;
+      color: #fff;
+      animation: pulse 2s infinite;
+    }
+    #mic-btn.recording {
+      background: #27ae60;
+      animation: pulse-recording 1s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(231,76,60,0.7);}
+      70% { box-shadow: 0 0 0 30px rgba(231,76,60,0);}
+      100% { box-shadow: 0 0 0 0 rgba(231,76,60,0);}
+    }
+    @keyframes pulse-recording {
+      0% { box-shadow: 0 0 0 0 rgba(39,174,96,0.7);}
+      70% { box-shadow: 0 0 0 30px rgba(39,174,96,0);}
+      100% { box-shadow: 0 0 0 0 rgba(39,174,96,0);}
+    }
+    #result {
+      margin-top: 30px;
+      font-size: 1.3em;
+      background: #222;
+      border-radius: 10px;
+      padding: 20px;
+      display: inline-block;
+      min-width: 350px;
+    }
+    #intelligible {
+      font-weight: bold;
+      font-size: 1.2em;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Intelligibility Checker</h1>
+  <div>
+    <input id="referenceInput" type="text" placeholder="Enter reference text here..." />
+    <button id="setReferenceBtn">Set Reference</button>
+  </div>
+  <div id="mic-container">
+    <button id="mic-btn" title="Click to record" disabled>
+      <span id="mic-icon">&#127908;</span>
+    </button>
+  </div>
+  <div id="result" style="display:none;">
+    <div><b>Predicted Text:</b> <span id="predicted"></span></div>
+    <div><b>WER:</b> <span id="wer"></span></div>
+    <div id="intelligible"></div>
+  </div>
+  <script>
+    let referenceText = "";
+    let mediaRecorder, audioChunks = [];
+
+    const referenceInput = document.getElementById('referenceInput');
+    const setReferenceBtn = document.getElementById('setReferenceBtn');
+    const micBtn = document.getElementById('mic-btn');
+    const resultDiv = document.getElementById('result');
+    const predictedSpan = document.getElementById('predicted');
+    const werSpan = document.getElementById('wer');
+    const intelligibleDiv = document.getElementById('intelligible');
+
+    setReferenceBtn.onclick = () => {
+      referenceText = referenceInput.value.trim();
+      if(referenceText.length === 0) {
+        alert("Please enter a reference text.");
+        return;
+      }
+      referenceInput.disabled = true;
+      setReferenceBtn.disabled = true;
+      micBtn.disabled = false;
+      micBtn.style.opacity = 1;
+    };
+
+    micBtn.onclick = async () => {
+      predictedSpan.textContent = "Listening and transcribing...";
+      resultDiv.style.display = "block";
+      const referenceText = referenceInput.value.trim();
+      const response = await fetch('/transcribe_and_wer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reference: referenceText })
+      });
+      const data = await response.json();
+      if (data.predicted_text) {
+        predictedSpan.textContent = data.predicted_text;
+        werSpan.textContent = data.wer_result.toFixed(2);
+        if (data.wer_result <= 0.4) {
+          intelligibleDiv.textContent = "Sentence is intelligible.";
+          intelligibleDiv.style.color = "#2ecc40";
+        } else {
+          intelligibleDiv.textContent = "Sentence is NOT intelligible.";
+          intelligibleDiv.style.color = "#e74c3c";
+        }
+      } else {
+        predictedSpan.textContent = "Error: " + (data.error || "Unknown error");
+        werSpan.textContent = "";
+        intelligibleDiv.textContent = "";
+      }
+    };
+
+    // Enable mic button only after reference is set
+    micBtn.disabled = true;
+    micBtn.style.opacity = 0.5;
+  </script>
+</body>
+</html>
