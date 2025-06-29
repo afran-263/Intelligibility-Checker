@@ -1,35 +1,32 @@
 # Intelligibility Checker
-Evaluating Dysarthric Speech using Goodness of Pronunciation (GoP) and Wav2Vec2
+A Web-Based Tool for Evaluating Pronunciation Using Wav2Vec2 and Word Error Rate (WER)
 
-## Project Overview
-Intelligibility-Checker is a diagnostic system designed to assess the pronunciation quality of dysarthric speech. The project utilizes Wav2Vec2 for feature extraction, Montreal Forced Aligner (MFA) for alignment, and a neural network-based phoneme classifier to compute GoP scores and related uncertainty metrics for evaluating speech intelligibility.
+## Overview
+Intelligibility-Checker is a web-based application that allows users to evaluate their spoken pronunciation by comparing their speech to a reference sentence using automatic speech recognition (ASR) powered by Wav2Vec2.0. It calculates the Word Error Rate (WER) to quantify how close the spoken sentence is to the reference.
 
-## Key Features
-- Wav2Vec2 Feature Extraction
+## Features
+- Real-Time Speech Recording from your microphone
 
-- Montreal Forced Aligner (MFA) for phoneme-to-frame alignment
+- ASR Transcription using Facebook’s Wav2Vec2 model
 
-- Phoneme-Level GoP Computation using:
+- Word Error Rate (WER) computation with substitutions, insertions, and deletions
 
-  - Entropy
-  - Margin
-  - MaxLogit
-  - LogitMargin
+- Flask-based Web Interface
 
-- Dysarthria-Specific Evaluation
+- Whisper-based optional transcription support
 
-- Phoneme Classifier Training using Healthy Speech
+## Running the App
+- Open your browser and go to http://127.0.0.1:5000/
 
-- PER (Phoneme Error Rate) Calculation
+- Enter a reference sentence
 
-## Outputs include:
+- The system will record your voice, transcribe it, and calculate WER
 
-- GoP score
+## Behind the Scenes
+- Record_audio() captures 5 seconds of audio using your microphone.
 
-- Entropy
+- Transcribe() uses the pretrained facebook/wav2vec2-large-960h model for speech-to-text.
 
-- Margin
+- The transcription is compared against the reference using a custom WER function.
 
-- MaxLogit
-
-- LogitMargin
+- The system outputs the Predicted Text and Word Error Rate (WER) score.
